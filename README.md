@@ -1,3 +1,3 @@
 # Traffic_Car_Game
-For working demo please check out my Codepen <br>
-<a href ="https://codepen.io/fizasayyed-the-selector/pen/vYrKddb" target="_blank">Demo</a>
+
+[README.md](https://github.com/fizasayyed/Traffic_Car_Game/files/9945646/README.md)
