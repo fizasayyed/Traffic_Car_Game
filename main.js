@@ -44,7 +44,7 @@ const treeCrownMaterial = new THREE.MeshLambertMaterial({
 
 let score;
 const speed = 0.0017;
-//////////////////////Building the TRACK /////////////
+////////////Building the TRACK /////////////
 // Declarations
 const trackRadius = 225;
 const trackWidth = 45;
@@ -63,19 +63,6 @@ const arcCenterX =
 const arcAngle3 = Math.acos(arcCenterX / innerTrackRadius);
 const arcAngle4 = Math.acos(arcCenterX / outerTrackRadius);
 
-// Scene
-const scene = new THREE.Scene();
-const playerCar = Car();
-scene.add(playerCar);
-
-//Set up Lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-scene.add(ambientLight);
-
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-dirLight.position.set(100, -300, 400);
-scene.add(dirLight);
-
 //Set up Camera
 const aspectRatio = window.innerWidth / window.innerHeight;
 const cameraWidth = 960;
@@ -93,7 +80,19 @@ camera.position.set(0, -210, 300);
 // camera.up.set(0, 0, 1);   As we se car from the above no need to set position
 camera.lookAt(0, 0, 0);
 
+// Scene
+const scene = new THREE.Scene();
+const playerCar = Car();
+scene.add(playerCar);
 renderMap(cameraWidth, cameraHeight * 2);
+
+//Set up Lights
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+dirLight.position.set(100, -300, 400);
+scene.add(dirLight);
 
 //Set up Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -101,6 +100,61 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.render(scene, camera);
 
 document.body.appendChild(renderer.domElement);
+
+reset();
+
+function reset() {
+  // Reset position and score
+  playerAngleMoved = 0;
+  score = 0;
+  scoreElement.innerText = "Press UP";
+
+  // Remove other vehicles
+  otherVehicles.forEach((vehicle) => {
+    // Remove the vehicle from the scene
+    scene.remove(vehicle.mesh);
+
+    // If it has hit-zone helpers then remove them as well
+    if (vehicle.mesh.userData.hitZone1)
+      scene.remove(vehicle.mesh.userData.hitZone1);
+    if (vehicle.mesh.userData.hitZone2)
+      scene.remove(vehicle.mesh.userData.hitZone2);
+    if (vehicle.mesh.userData.hitZone3)
+      scene.remove(vehicle.mesh.userData.hitZone3);
+  });
+  otherVehicles = [];
+
+  resultsElement.style.display = "none";
+
+  lastTimestamp = undefined;
+
+  // Place the player's car to the starting position
+  movePlayerCar(0);
+
+  // Render the scene
+  renderer.render(scene, camera);
+
+  ready = true;
+}
+
+function startGame() {
+  if (ready) {
+    ready = false;
+    scoreElement.innerText = 0;
+    buttonsElement.style.opacity = 1;
+    instructionsElement.style.opacity = 0;
+    youtubeLogo.style.opacity = 1;
+    renderer.setAnimationLoop(animation);
+  }
+}
+
+function positionScoreElement() {
+  const arcCenterXinPixels = (arcCenterX / cameraWidth) * window.innerWidth;
+  scoreElement.style.cssText = `
+    left: ${window.innerWidth / 2 - arcCenterXinPixels * 1.3}px;
+    top: ${window.innerHeight / 2}px
+  `;
+}
 
 //Using pythagorus theorem
 function getDistance(coordinate1, coordinate2) {
@@ -119,6 +173,7 @@ setTimeout(() => {
   buttonsElement.style.opacity = 1;
   youtubeLogo.style.opacity = 1;
 }, 4000);
+
 
 ////////////// Bulidng the car ///////////////////
 function createWheels() {
@@ -753,42 +808,6 @@ function getOuterField(mapWidth, mapHeight) {
 
 //////////////TRACK completed /////////////
 
-function startGame() {
-  if (ready) {
-    ready = false;
-    scoreElement.innerText = 0;
-    buttonsElement.style.opacity = 1;
-    instructionsElement.style.opacity = 0;
-    renderer.setAnimationLoop(animation);
-  }
-}
-function positionScoreElement() {
-  const arcCenterXinPixels = (arcCenterX / cameraWidth) * window.innerWidth;
-  scoreElement.style.cssText = `
-    left: ${window.innerWidth / 2 - arcCenterXinPixels * 1.3}px;
-    top: ${window.innerHeight / 2}px
-  `;
-}
-positionScoreElement();
-
-function reset() {
-  //Reset the position and score
-  playerAngleMoved = 0;
-  movePlayerCar(0);
-  score = 0;
-  scoreElement.innerText = score;
-  lastTimeStamp = undefined;
-
-  //Remove other vehicles
-  otherVehicles.forEach((vehicle) => {
-    scene.remove(vehicle.mesh);
-  });
-  otherVehicles = [];
-
-  renderer.render(scene, camera);
-  ready = true;
-}
-reset();
 window.addEventListener("keydown", function (event) {
   if (event.key == "ArrowUp") {
     startGame();
