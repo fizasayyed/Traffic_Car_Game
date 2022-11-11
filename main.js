@@ -1,4 +1,68 @@
 window.focus(); // Capture keys right away (by default focus is on editor)
+// Declarations
+//Car colors
+const vehicleColors = [
+  0xa52523, 0xef2d56, 0x0ad3ff, 0xff9f1c /*0xa52523, 0xbdb638, 0x78b14b*/,
+];
+
+const lawnGreen = "#67C240";
+const trackColor = "#546E90";
+const edgeColor = "#725F48";
+const treeCrownColor = 0x498c2c;
+const treeTrunkColor = 0x4b3f2f;
+const playerAngleInitial = Math.PI;
+
+let playerAngleMoved;
+let accelerate = false; // Is the player accelerating
+let decelerate = false; // Is the player decelerating
+let otherVehicles = [];
+let ready;
+let lastTimestamp;
+
+const scoreElement = document.getElementById("score");
+const buttonsElement = document.getElementById("buttons");
+const instructionsElement = document.getElementById("instructions");
+const resultsElement = document.getElementById("results");
+const accelerateButton = document.getElementById("accelerate");
+const decelerateButton = document.getElementById("decelerate");
+const youtubeLogo = document.getElementById("youtube-main");
+const config = {
+  showHitZones: false,
+  shadows: true, // Use shadow
+  trees: true, // Add trees to the map
+  curbs: true, // Show texture on the extruded geometry
+  grid: false, // Show grid helper
+};
+// Declarations for tree
+const treeTrunkGeometry = new THREE.BoxBufferGeometry(15, 15, 30);
+const treeTrunkMaterial = new THREE.MeshLambertMaterial({
+  color: treeTrunkColor,
+});
+const treeCrownMaterial = new THREE.MeshLambertMaterial({
+  color: treeCrownColor,
+});
+
+let score;
+const speed = 0.0017;
+//////////////////////Building the TRACK /////////////
+// Declarations
+const trackRadius = 225;
+const trackWidth = 45;
+const innerTrackRadius = trackRadius - trackWidth;
+const outerTrackRadius = trackRadius + trackWidth;
+
+const arcAngle1 = (1 / 3) * Math.PI; //that equals 60 degrees
+const deltaY = Math.sign(arcAngle1) * innerTrackRadius;
+const arcAngle2 = Math.asin(deltaY / outerTrackRadius);
+
+const arcCenterX =
+  (Math.cos(arcAngle1) * innerTrackRadius +
+    Math.cos(arcAngle2) * outerTrackRadius) /
+  2;
+
+const arcAngle3 = Math.acos(arcCenterX / innerTrackRadius);
+const arcAngle4 = Math.acos(arcCenterX / outerTrackRadius);
+
 // Scene
 const scene = new THREE.Scene();
 const playerCar = Car();
@@ -44,45 +108,7 @@ function getDistance(coordinate1, coordinate2) {
   const verticalDistance = coordinate2.y - coordinate1.y;
   return Math.sqrt(horizontalDistance ** 2 + verticalDistance ** 2);
 }
-const lawnGreen = "#67C240";
-const trackColor = "#546E90";
-const edgeColor = "#725F48";
-const treeCrownColor = 0x498c2c;
-const treeTrunkColor = 0x4b3f2f;
 
-const treeTrunkGeometry = new THREE.BoxBufferGeometry(15, 15, 30);
-const treeTrunkMaterial = new THREE.MeshLambertMaterial({
-  color: treeTrunkColor,
-});
-const treeCrownMaterial = new THREE.MeshLambertMaterial({
-  color: treeCrownColor,
-});
-
-let score;
-const speed = 0.0017;
-
-const playerAngleInitial = Math.PI;
-let playerAngleMoved;
-let accelerate = false; // Is the player accelerating
-let decelerate = false; // Is the player decelerating
-
-let otherVehicles = [];
-let ready;
-let lastTimestamp;
-
-const scoreElement = document.getElementById("score");
-const buttonsElement = document.getElementById("buttons");
-const instructionsElement = document.getElementById("instructions");
-const resultsElement = document.getElementById("results");
-const accelerateButton = document.getElementById("accelerate");
-const decelerateButton = document.getElementById("decelerate");
-const config = {
-  showHitZones: false,
-  shadows: true, // Use shadow
-  trees: true, // Add trees to the map
-  curbs: true, // Show texture on the extruded geometry
-  grid: false, // Show grid helper
-};
 if (config.grid) {
   const gridHelper = new THREE.GridHelper(80, 8);
   gridHelper.rotation.x = Math.PI / 2;
@@ -94,7 +120,7 @@ setTimeout(() => {
   youtubeLogo.style.opacity = 1;
 }, 4000);
 
-////////////// Bulidng the car //////////
+////////////// Bulidng the car ///////////////////
 function createWheels() {
   const geometry = new THREE.BoxBufferGeometry(12, 12, 33);
   const material = new THREE.MeshLambertMaterial({ color: 0x333333 });
@@ -106,10 +132,7 @@ function pickRandom(array) {
 }
 function Car() {
   const car = new THREE.Group();
-  //Car colors
-  const vehicleColors = [
-    0xa52523, 0xef2d56, 0x0ad3ff, 0xff9f1c /*0xa52523, 0xbdb638, 0x78b14b*/,
-  ];
+  
   const color = pickRandom(vehicleColors);
   const main = new THREE.Mesh(
     new THREE.BoxBufferGeometry(60, 30, 15),
@@ -318,7 +341,7 @@ function Wheel() {
 
 /////////////// TRUCK and Cargo completed //////////
 
-///////// Trees /////////
+////////////////// Trees ///////////////////
 function Tree() {
   const tree = new THREE.Group();
 
@@ -343,24 +366,6 @@ function Tree() {
 
   return tree;
 }
-
-//////////////////////Building the TRACK ///////////
-const trackRadius = 225;
-const trackWidth = 45;
-const innerTrackRadius = trackRadius - trackWidth;
-const outerTrackRadius = trackRadius + trackWidth;
-
-const arcAngle1 = (1 / 3) * Math.PI; //that equals 60 degrees
-const deltaY = Math.sign(arcAngle1) * innerTrackRadius;
-const arcAngle2 = Math.asin(deltaY / outerTrackRadius);
-
-const arcCenterX =
-  (Math.cos(arcAngle1) * innerTrackRadius +
-    Math.cos(arcAngle2) * outerTrackRadius) /
-  2;
-
-const arcAngle3 = Math.acos(arcCenterX / innerTrackRadius);
-const arcAngle4 = Math.acos(arcCenterX / outerTrackRadius);
 
 /////////Rendering the track Map /////////////
 
@@ -403,8 +408,6 @@ function renderMap(mapWidth, mapHeight) {
   fieldMesh.receiveShadow = true;
   fieldMesh.matrixAutoUpdate = false;
   scene.add(fieldMesh);
-
-  positionScoreElement();
 
   if (config.trees) {
     const tree1 = Tree();
@@ -762,11 +765,11 @@ function startGame() {
 function positionScoreElement() {
   const arcCenterXinPixels = (arcCenterX / cameraWidth) * window.innerWidth;
   scoreElement.style.cssText = `
-      left: ${window.innerWidth / 2 - arcCenterXinPixels * 1.3}px;
-      top: ${window.innerHeight / 2}px
-    `;
+    left: ${window.innerWidth / 2 - arcCenterXinPixels * 1.3}px;
+    top: ${window.innerHeight / 2}px
+  `;
 }
-reset();
+positionScoreElement();
 
 function reset() {
   //Reset the position and score
@@ -785,7 +788,7 @@ function reset() {
   renderer.render(scene, camera);
   ready = true;
 }
-
+reset();
 window.addEventListener("keydown", function (event) {
   if (event.key == "ArrowUp") {
     startGame();
